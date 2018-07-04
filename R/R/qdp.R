@@ -8,10 +8,6 @@
 #' 'qdp' creates a scaffolding to enable an analyst to do 
 #' what an analyst does best: analysis
 #' 
-#' qdp is highly recommended to be used in-conjunction with git, making the
-#' framework machine agnostic and allowing a user to start analysis on
-#' one machine, and seamlessly continue analysis on another.
-#' 
 #' Once a 'project' is created using 'create_project', the analyst may load
 #' accompanying scripts, configuration files, data, reports, etc by running
 #' 'start_project'
@@ -19,9 +15,12 @@
 #' The project's directory structure is specified as such:
 #' project              # name of project
 #'  │ 
-#'  ├── README.md       # readme \n
+#'  ├── README.md       # readme
+#' 
 #'  ├── .git/           # git repo 
+#' 
 #'  ├── install/        # install scripts
+#' 
 #'  ├── data/           # data
 #'  ├── lib/            # library code
 #'      ├── class.py    # source code (e.g., .R, .py files)
@@ -32,24 +31,23 @@
 #' 
 #' Optional arguments to override defaults: 
 #' 
-#' 'r_config_options': .Rprofile-like options; however, project specific
+#' 'r_config_options'       .Rprofile-like options; however, project specific
 #' 
-#' 'py_config_options': creates config.py which may imported as 
-#'                      'import config' for python
+#' 'py_config_options'      creates config.py which may imported as 
+#'                          'import config' for python
 #' 
-#' 'module_setup_options': other R scripts to source upon 
-#'                      setup; e.g., source('project/lib/analysis.R')
+#' 'module_setup_options'   other R scripts to source upon setup; 
+#'                          e.g., source('project/lib/analysis.R')
 #' 
-#' 'git_config_options': git configuration options upon initialization
+#' 'git_config_options'     git configuration options upon initialization
 #' 
-#' 'git_ignore_options': git ignore options upon initialization
+#' 'git_ignore_options'     git ignore options upon initialization
 #' 
 #' The project's default path is set to: 
-#' Linux Users: /home/user/projects
 #' 
+#' Linux:       /home/user/projects
 #' Windows:     C:/Users/user/projects
-#' 
-#' Mac OS:      /Users/user/projects
+#' Mac:         /Users/user/projects
 #' 
 #' @param project The name of the project
 #' 
@@ -62,8 +60,7 @@
 #'
 #' @export
 #' 
-init_project <- start_project <- init <- create_project <- function(
-    project, path="", cores=NULL, modules=NULL, ...){
+init_project <- function(project, path="", cores=NULL, modules=NULL, ...){
 
     os <- Sys.info()[["sysname"]]
     username <- Sys.info()[["user"]]
@@ -113,7 +110,12 @@ init_project <- start_project <- init <- create_project <- function(
                 "Sys.setenv(RETICULATE_PYTHON='/usr/bin/python3')",
                 "\r",
                 "# Timezone Options",
-                "Sys.setenv(TZ='American/New_York')"
+                "Sys.setenv(TZ='American/New_York')",
+                "\r",
+                "# Parallel Options",
+                "require(doMC, quietly=TRUE)",
+                "data.table::setDTthreads(.cores-1L)",
+                "doMC::registerDoMC(.cores - 1L)"
             )
 
         usethis:::write_union(root_dir, quiet=TRUE,
@@ -132,7 +134,10 @@ init_project <- start_project <- init <- create_project <- function(
         if(!hasArg(module_setup_options))
             module_setup_options <- c(
                 "\r",
-                "# Init Setup"
+                "# Init Setup",
+                "if(!library(putils, logical.return=TRUE))",
+                "   devtools::install_github('nmatare/putils', 
+                        subdir='/R', reload=TRUE)"
             )        
 
         usethis:::write_union(root_dir, quiet=TRUE,

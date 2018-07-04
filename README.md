@@ -1,8 +1,11 @@
 # putils
 
-A hybrid R/Python package containing utility functions/modules for data analysis 
+A hybrid R/Python package containing utility functions/modules for data analysis
 
-## Functions:
+* Version 0.0.9
+* Development Status :: 2 - Pre-Alpha
+
+## Features:
 
   * 'create_project', 'start_project' 
   	(scaffolding to quickly start an R/Python project)
@@ -15,23 +18,37 @@ A hybrid R/Python package containing utility functions/modules for data analysis
 
 ## Installation
 
-Source your desired files:
+Install the package 
 
-    source("https://raw.githubusercontent.com/nmatare/putils/master/qdp.R")
+```R
+library(devtools)
+devtools::install_github("nmatare/putils", subdir="/R")
+```
 
-## Quickly Deployable Project 
+```Python 
+
+
+```
+
+## Usage:
+
+### Quickly Deployable Project 
 
 ```R
 
 
 ```
 
-## Fast Big Query 
+### Fast Big Query 
 
 ```R
 
 
 ```
+
+Author(s)
+----
+* Nathan Matare 
 
 ## License
 
