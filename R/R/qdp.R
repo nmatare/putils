@@ -82,7 +82,8 @@ init_project <- function(project, path="", cores=NULL, modules=NULL,
             file.path("Users", username, "projects", project),
         "Windows" =
             file.path("C:Users", username, 
-                      "Documents", "projects", project))
+                      "Documents", "projects", project)
+    )
   else
     root_dir <- path
 
@@ -128,7 +129,7 @@ init_project <- function(project, path="", cores=NULL, modules=NULL,
         "doMC::registerDoMC(.cores)",
         "\r",
         "# Spark Options",
-        "Sys.setenv(SPARK_CONF_DIR='", 
+        "Sys.setenv(SPARK_CONF_DIR='~/", 
           file.path(strat_name, "conf", "spark-custom.conf"), "')", 
         sep = "\n"
       )
@@ -195,7 +196,8 @@ init_project <- function(project, path="", cores=NULL, modules=NULL,
 
   suppressWarnings(suppressMessages({ # Source configuration files
       source(file.path(root_dir, "conf", "config.R"))
-      if(!is.null(modules)) sapply(modules, source)  # Source scripts(modules)
+      if(!is.null(modules))           # Source scripts(modules)
+        sapply(modules, function(x) source(file.path(root_dir, "lib", x)))  
   }))
 
   setwd(root_dir)
