@@ -139,7 +139,7 @@ sc=SparkSession.builder.master("local").appName("test").getOrCreate()
 sc.read.json('test')
 
 
-sc.read.format("avro").load("/tmp/deeptick/temp_bq_155c6ec4b849000000000000.avro")
+sc.read.format("avro").load("/tmp/deeptick/temp_bq_1e5542cafd43.avro")
 
 sc=SparkContext(master="local", appName="test")
 
@@ -157,7 +157,11 @@ df.show()
 
 import avro.schema
 
-df = spark.read.format("com.databricks.spark.avro").load("/tmp/episodes.avro")
+pyspark --packages com.databricks:spark-avro_2.11:4.0.0
+df=spark.read.format("com.databricks.spark.avro").load("/tmp/deeptick/temp_bq_1e5542cafd43.avro")
+
+
+df2 = spark.read.csv("/tmp/deeptick/temp_bq_1e554e01fce2000000000000.csv.gz", header=True, mode="DROPMALFORMED")
 
 #  Saves the subset of the Avro records read in
 subset = df.where("doctor > 5")

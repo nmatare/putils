@@ -153,23 +153,22 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
   .send_to_gcs <- function(client, bigquery, base_name, dataset, 
                            verbose)
   {
-      export_config = bigquery$ExtractJobConfig()
-      export_config$compression = 
-        if(export_as == "csv.gz") "GZIP" else "NONE"
-      export_config$destination_format = 
-        if(export_as == "avro") "AVRO" else "CSV"
-      export_config$print_header = FALSE
+    export_config = bigquery$ExtractJobConfig()
+    export_config$compression = 
+      if(export_as == "csv.gz") "GZIP" else "NONE"
+    export_config$destination_format = 
+      if(export_as == "avro") "AVRO" else "CSV"
+    export_config$print_header = FALSE
 
-      table_ref = client$dataset(dataset)$table(
-        paste0(base_name, "_temp_table")) 
+    table_ref = client$dataset(dataset)$table(
+      paste0(base_name, "_temp_table")) 
 
-      extract_job = client$extract_table(
-        source=table_ref,
-        destination_uris=paste0(
-          'gs://', bucket, "/", base_name, "*.", export_as),
-        job_config=export_config
-      )
-
+    extract_job = client$extract_table(
+      source=table_ref,
+      destination_uris=paste0(
+        'gs://', bucket, "/", base_name, "*.", export_as),
+      job_config=export_config
+    )
     if(verbose)
       cat("Transferring data to Google Cloud Storage \n")
 
@@ -246,7 +245,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
         cat(paste("Concatenating .avro files \n"))
 
       # @TODO fancy call the Java class directly with rJava and .jcall
-      run_jar <- system.file("inst", "avro-tools-1.8.2.jar", 
+      run_jar <- system.file("java", "avro-tools-1.8.2.jar", 
         package="putils", mustWork=TRUE)
       command <-  paste("java -jar", run_jar, "concat", 
                     paste(file.path(path, temp_names), collapse=" "), 

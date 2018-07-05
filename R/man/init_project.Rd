@@ -4,7 +4,8 @@
 \alias{init_project}
 \title{'Quickly Deployable Project (qdp)'}
 \usage{
-init_project(project, path = "", cores = NULL, modules = NULL, ...)
+init_project(project, path = "", cores = NULL, modules = NULL,
+  python = 3, ...)
 }
 \arguments{
 \item{project}{The name of the project}
@@ -29,17 +30,17 @@ The project's directory structure is specified as such:
 project              # name of project
  │ 
  ├── README.md       # readme
-
  ├── .git/           # git repo 
-
- ├── install/        # install scripts
-
+ ├── inst/           # installation
  ├── data/           # data
  ├── lib/            # library code
-     ├── class.py    # source code (e.g., .R, .py files)
-     └── config.R    # configuration files for project
+ │   ├── class.py    # source code (e.g., .R, .py files)
+ │   └── analysis.R  # analysis script
+ ├── conf/
+ │    ├── config.py  # python config files
+ │    └── config.R   # R config files
  ├── lit/            # literature
- ├── rep/            # reports
+ ├── report/         # reports
  └── log/            # log files
 
 Optional arguments to override defaults: 
@@ -48,6 +49,9 @@ Optional arguments to override defaults:
 
 'py_config_options'      creates config.py which may imported as 
                          'import config' for python
+
+'spark_config_options'   creates the default configuration for Spark
+
 
 'module_setup_options'   other R scripts to source upon setup; 
                          e.g., source('project/lib/analysis.R')
