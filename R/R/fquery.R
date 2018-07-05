@@ -109,10 +109,24 @@
 #' @author      Nathan Matare <email: nmatare@chicagobooth.com>
 #'
 #' @examples
+#' \dontrun{
+#' output <- fast_bq_query_with_gcs(
+#'    query="SELECT * FROM dataset.table WHERE TIME > 2018 ORDER BY TIME",
+#'    project_id="user_project_id",
+#'    bucket="user_cloud_bucket",
+#'    dataset="user_dataset",
+#'    table="user_table",
+#'    servive="location_to_user_json_service_file",
+#'    path=tempdir(),
+#'    legacy_sql=TRUE,
+#'    download=TRUE,
+#'    export_as="csv.gz"
+#' )
+#' str(output) # data.table created from csv.gz files
 #' 
-#' 
+#' }
 #' @export
-
+#' 
 fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table, 
                                    service_file, verbose=TRUE, download=TRUE, 
                                    path=tempdir(), legacy_sql=TRUE, 
@@ -241,7 +255,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
     } else {
 
       if(verbose)
-        cat(paste("Concatenating .avro files \n"))
+        cat(paste("Concatenating avro files \n"))
 
       # @TODO fancy call the Java class directly with rJava and .jcall
       run_jar <- system.file("java", "avro-tools-1.8.2.jar", 

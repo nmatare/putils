@@ -4,7 +4,7 @@ Version: 0.0.9
 Authors@R: person("Nathan", "Matare", email = "nathan.matare@chicagobooth.com", 
 	role = c("aut", "cre"))
 Description: Utility functions for data cleaning, manipulation, and analysis
-Depends: R (>= 3.4.3)
+Depends: R (>= 3.4.0)
 License: Apache 2.0
 Encoding: UTF-8
 LazyData: true
