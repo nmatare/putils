@@ -115,7 +115,10 @@ init_project <- function(project, path="", cores=NULL, modules=NULL, ...){
                 "# Parallel Options",
                 "require(doMC, quietly=TRUE)",
                 "data.table::setDTthreads(.cores-1L)",
-                "doMC::registerDoMC(.cores - 1L)"
+                "doMC::registerDoMC(.cores-1L)",
+                "\r",
+                "# Spark Options",
+                "Sys.setenv(PYSPARK_PYTHON=python3)"
             )
 
         usethis:::write_union(root_dir, quiet=TRUE,
@@ -203,11 +206,3 @@ install_github_package <- function(github_directory){
             stop(paste("Could not install", package))
     invisible(TRUE)
 }
-
-#' @param package A character vector specifying the required R library
-#' @export
-check_dependency <- function(package)
-    if(!suppressWarnings(library(package, logical.return=TRUE, character.only=TRUE, 
-            quietly=TRUE, warn.conflicts=FALSE)))
-        stop(paste("Please install package'", package, "'onto this machine")) 
-

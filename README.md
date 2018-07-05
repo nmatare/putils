@@ -1,6 +1,7 @@
 # putils
 
-A hybrid R/Python package containing utility functions/modules for data analysis
+A hybrid R/Python package containing public utility 
+functions/modules for data analysis
 
 * Version 0.0.9
 * Development Status :: 2 - Pre-Alpha
@@ -11,26 +12,34 @@ A hybrid R/Python package containing utility functions/modules for data analysis
   	(scaffolding to quickly start an R/Python project)
 
   * 'fast_bq_query_with_gcs' (quickly download large datasets from 
-      Google BigQuery onto your local machine) 
+      Google BigQuery to client) 
 
   * 'as.mmap.xts ' (memory mapped method for xts objects; requires 'mmap')
 
 
 ## Installation
 
-Install the package 
+R Installation
 
 ```R
 library(devtools)
 devtools::install_github("nmatare/putils", subdir="/R")
 ```
 
-```Python 
+Python installation
 
-
+```sh
+    pip3 install git+https://github.com/nmatare/putils.git#egg=measurements
 ```
 
 ## Usage:
+
+### Fast Big Query 
+
+```R
+
+
+```
 
 ### Quickly Deployable Project 
 
@@ -39,12 +48,6 @@ devtools::install_github("nmatare/putils", subdir="/R")
 
 ```
 
-### Fast Big Query 
-
-```R
-
-
-```
 
 Author(s)
 ----

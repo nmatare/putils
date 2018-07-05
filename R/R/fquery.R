@@ -89,6 +89,7 @@
 #' \describe{  
 #' \item{data.table:}{A data.table of class 'data.table' containing 
 #' the queried data}
+#' }
 #'
 #' @references  
 #' https://cloud.google.com/bigquery/docs/cached-results
@@ -115,7 +116,7 @@
 fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table, 
                                    service_file, verbose=TRUE, download=TRUE, 
                                    path=tempdir(), legacy_sql=TRUE, 
-                                   export_as='csv.gz',  ...          
+                                   export_as='csv.gz', ...          
 ){
 
   export_as <- match.arg(export_as, c("csv", "csv.gz", "avro"))
@@ -129,11 +130,11 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
   client = bigquery$Client$from_service_account_json(service_file)
   base_name <- gsub("/","", tempfile("temp_bq_", tmpdir=""))
 
-  .query_bigquery <- function(client, bigquery, base_name, 
-                              dataset, verbose, legacy_sql){
+  .query_bigquery <- function(client, query, bigquery, base_name, 
+                              dataset, verbose, legacy_sql)
+  {
     job_config = bigquery$QueryJobConfig()
-    table_ref = client$dataset(dataset)$table(
-      paste0(base_name, "_temp_table"))   
+    table_ref = client$dataset(dataset)$table(paste0(base_name, "_temp_table"))   
     job_config$destination = table_ref
     job_config$use_legacy_sql = legacy_sql
     job_config$allow_large_results = TRUE
@@ -147,9 +148,11 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
   }
 
   stopifnot(.query_bigquery(
-    client, bigquery, base_name, dataset, verbose, legacy_sql))
+    client, query, bigquery, base_name, dataset, verbose, legacy_sql))
   
-  .send_to_gcs <- function(client, bigquery, base_name, dataset, verbose){
+  .send_to_gcs <- function(client, bigquery, base_name, dataset, 
+                           verbose)
+  {
       export_config = bigquery$ExtractJobConfig()
       export_config$compression = 
         if(export_as == "csv.gz") "GZIP" else "NONE"
@@ -212,31 +215,52 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
         TRUE
     }
 
+    base::dir.create(path, showWarnings=FALSE)
     results <- lapply(blobs, .download_blob_to_temp_file)
+
     if(!all(unlist(results)))
       stop(paste("Errors downloading", export_as ,"files"))
 
-    blob_names <- list.files(pattern=paste0(base_name, ".*.", export_as))
-    bucket_ref$delete_blobs(blob_names)
-
-    if(verbose)
-      cat(paste("Reading", export_as ,"into memory as data.table \n"))
+    temp_names <- list.files(path=path, 
+      pattern=paste0(base_name, ".*.", export_as))
+    bucket_ref$delete_blobs(blobs)
 
     if(Sys.info()["sysname"] != "Windows")
       unixtools::set.tempdir(path)
 
-    if(export_as != "avro")
+    if(export_as != "avro"){
+      if(verbose)
+        cat(paste("Reading", export_as ,"into memory as data.table \n"))
+
       dt <- data.table::fread(
-        input=paste0("zcat ", path, "/" , paste( # identical to gunzip -c
-          compressed_blobs, collapse=" ")),
+        input=paste0(
+          if(export_as == "csv.gz") "zcat " else "", path, "/" , paste( 
+          temp_names, collapse=" ")), # identical to gunzip -c
         showProgress=verbose,
-        ...=...)
-    else {
-      # concat avro files
-      # read avro files into DT
+        ...=...
+      )
+
+    } else {
+
+      if(verbose)
+        cat(paste("Concatenating .avro files \n"))
+
+      # @TODO fancy call the Java class directly with rJava and .jcall
+      run_jar <- system.file("inst", "avro-tools-1.8.2.jar", 
+        package="putils", mustWork=TRUE)
+      command <-  paste("java -jar", run_jar, "concat", 
+                    paste(file.path(path, temp_names), collapse=" "), 
+                      file.path(path, paste0(base_name, ".avro")))
+
+      if(system(command, ignore.stdout=TRUE, ignore.stderr=TRUE) != 0)
+        stop(paste("Errors concatenating .avro files"))
+
+      cat(paste0("The queried results are available in ", 
+        file.path(path, base_name), "; use Spark to read the data \n"))
+      dt <- NULL
     }
 
-    stopifnot(all(unlist(lapply(blob_names, .remove_temp_file))))
+    stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
     return(dt)
 
   } else 

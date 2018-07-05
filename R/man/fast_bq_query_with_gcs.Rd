@@ -50,6 +50,13 @@ include 'csv', 'csv.gz', or 'avro.' Defaults to 'csv.gz'}
 \item{...}{(optional) Any pass-through arguments (**kwargs) to 
 data.table::fread()}
 }
+\value{
+a data.table of class 'data.table' containing:
+\describe{  
+\item{data.table:}{A data.table of class 'data.table' containing 
+the queried data}
+}
+}
 \description{
 Fast retrieval of user data from Google Big Query. The queried data are 
 transferred to the user's specified Google Cloud Storage bucket
