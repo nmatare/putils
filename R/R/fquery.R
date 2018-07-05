@@ -207,9 +207,8 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
         TRUE
     }
 
-    .remove_temp_file <- function(blob){
-        blob_ref <- bucket_ref$get_blob(blob$name)
-        temp_file <- file.path(path, blob$name)
+    .remove_temp_file <- function(temp_file){
+        temp_file <- file.path(path, temp_file)
         suppressWarnings(file.remove(temp_file))
         TRUE
     }
