@@ -3,5 +3,6 @@
 export(as.mmap.xts)
 export(fast_bq_query_with_gcs)
 export(init_project)
+export(start_project)
 export(install_cran_package)
 export(install_github_package)

@@ -14,5 +14,7 @@ Imports:
     data.table (>= 1.11.4),
     xts (>= 0.10),
     usethis (>= 1.3),
-    git2r (>= 0.21)
+    git2r (>= 0.21),
+	bit64 (>= 0.9)
+
 RoxygenNote: 6.0.1

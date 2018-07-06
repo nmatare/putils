@@ -23,7 +23,7 @@ from setuptools import setup, find_packages
 
 # Package metadata.
 name = 'putils'
-description = 'Commonly used utility functions'
+description = 'Commonly used utility functions for public use'
 version = '0.0.9'
 # Should be one of:
 # Development Status :: 1 - Planning
@@ -57,7 +57,7 @@ setup(
     author='Nathan Matare',
     author_email='nmatare@chicagobooth.edu',
     license='Apache 2.0',
-    url='https://github.com/nmatare/utils',
+    url='https://github.com/nmatare/putils',
     keywords=keywords,
     classifiers=[
         release_status,

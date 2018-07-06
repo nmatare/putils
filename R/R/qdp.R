@@ -63,8 +63,8 @@
 #'
 #' @export
 #' 
-init_project <- function(project, path="", cores=NULL, modules=NULL, 
-                         python=3, ...)
+init_project <- start_project <- function(project, path="", cores=NULL, 
+  modules=NULL, python=3, ...)
 {
 	os <- Sys.info()[["sysname"]]
   username <- Sys.info()[["user"]]
@@ -126,11 +126,7 @@ init_project <- function(project, path="", cores=NULL, modules=NULL,
         "require(doMC, quietly=TRUE)",
         "require(data.table, quietly=TRUE)",
         "data.table::setDTthreads(.cores)",
-        "doMC::registerDoMC(.cores)",
-        "\r",
-        "# Spark Options",
-        "Sys.setenv(SPARK_CONF_DIR='~/", 
-          file.path(strat_name, "conf", "spark-custom.conf"), "')", 
+        "doMC::registerDoMC(.cores)"
         sep = "\n"
       )
 
@@ -155,11 +151,19 @@ init_project <- function(project, path="", cores=NULL, modules=NULL,
       # Spark Options
       if(!hasArg(spark_config_options))
           spark_config_options <- c(
-          "spark.jars.packages    com.databricks:spark-avro_2.11:4.0.0"
-      )
+            "custom: ",
+            " # local-only configuration",
+            " spark.env.SPARK_LOCAL_IP.local: 127.0.0.1",
+            " \r",
+            " # include the embedded csv package for spark 1.x",
+            " sparklyr.csv.embedded: '^1.*'",
+            " \r",
+            " # include the databricks avro extension",
+            " spark.jars.packages:    com.databricks:spark-avro_2.11:4.0.0"
+          )
 
       usethis:::write_union(root_dir, quiet=TRUE,
-          file.path("conf", "spark-custom.conf"), spark_config_options)
+          file.path("conf", "spark-custom.yml"), spark_config_options)
 
       # Library Options
       if(!hasArg(module_setup_options))

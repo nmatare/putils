@@ -8,7 +8,7 @@ functions/modules for data analysis
 
 ## Features:
 
-  * 'create_project', 'start_project' 
+  * 'init_project', 'start_project' 
   	(scaffolding to quickly start an R/Python project)
 
   * 'fast_bq_query_with_gcs' (quickly download large datasets from 
@@ -28,8 +28,11 @@ devtools::install_github("nmatare/putils", subdir="/R")
 
 Python installation
 
+* Prerequisites:
+- Install [spark-avro](https://github.com/databricks/spark-avro) from Databricks
+
 ```sh
-    pip3 install git+https://github.com/nmatare/putils.git#egg=measurements
+pip3 install git+https://github.com/nmatare/putils.git#egg=measurements
 ```
 
 ## Usage:

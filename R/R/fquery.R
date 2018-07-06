@@ -198,6 +198,16 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
     TRUE
   }
 
+  .extract_meta_data <- function(client, dataset, base_name){
+    table_ref = client$dataset(dataset)$table(paste0(base_name, "_temp_table"))
+    meta_data <- sapply(py$list(client$get_table(table_ref)$schema), 
+      function(x) c(x$name, x$field_type))
+    return(meta_data)
+  }
+
+  if(export_as != "avro")
+    meta_data <- .extract_meta_data(client, dataset, base_name)
+
   stopifnot(.delete_temp_table(client, dataset, base_name))
 
   if(download){
@@ -249,6 +259,9 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
           if(export_as == "csv.gz") "zcat " else "", path, "/" , paste( 
           temp_names, collapse=" ")), # identical to gunzip -c
         showProgress=verbose,
+        col.names=meta_data[1, ],
+        colClasses=as.vector(
+          sapply(meta_data[2, ], convert_big_query_types_to_r)),
         ...=...
       )
 
@@ -268,15 +281,38 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
         stop(paste("Errors concatenating .avro files"))
 
       cat(paste0("The queried results are available in ", 
-        file.path(path, base_name), "; use Spark to read the data \n"))
+        file.path(path, base_name), ".avro; use Spark to read the data \n"))
       dt <- NULL
     }
 
-    stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
+    # stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
     return(dt)
 
   } else 
     invisible(cat(paste0(
       "Finished; results are available in bucket: ", bucket, "\n")))
 }
+
+#' @description Maps BigQuery datatypes to R equivalent
+#' @param x The BigQuery Data type
+convert_big_query_types_to_r <- function(x){
+  return(switch(x,
+    "FLOAT" = "double", 
+    "FLOAT64" = "double",
+    "NUMERIC" = "double",
+    "INTEGER" = "integer",
+    "INT64" = "bit64::integer64",
+    "TIMESTAMP" = "character", # Dates are read as character currently.
+    "DATE" = "character", # "
+    "TIME" = "character", # "
+    "DATETIME" = "character", # "
+    "BOOLEAN" = "logical",
+    "BOOL" = "logical",
+    "STRING" = "character",
+    "BYTES" = "raw",
+    "RECORD" = stop("Queries returning records are not supported"),
+    "ARRAY" = stop("Queries returning nested arrays are not supported")
+  ))
+}
+
 
