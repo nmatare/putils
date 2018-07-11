@@ -284,11 +284,11 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
         stop(paste("Errors concatenating .avro files"))
 
       cat(paste0("The queried results are available in ", 
-        file.path(path, base_name), ".avro\n"))
+        file.path(path, base_name), ".avro \n"))
       dt <- NULL
     }
 
-    # stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
+    stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
     return(dt)
 
   } else 

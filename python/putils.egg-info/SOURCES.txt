@@ -1,0 +1,10 @@
+setup.py
+putils/__init__.py
+putils/fquery.py
+putils/timed.py
+putils.egg-info/PKG-INFO
+putils.egg-info/SOURCES.txt
+putils.egg-info/dependency_links.txt
+putils.egg-info/not-zip-safe
+putils.egg-info/requires.txt
+putils.egg-info/top_level.txt

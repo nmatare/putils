@@ -19,7 +19,6 @@
 # 
 """ Create panel DataFrames and spatio-temporal Arrays  """
 
-from dask.distributed import Client, LocalCluster, wait
 from xarray import DataArray
 import dask
 from dask import delayed
@@ -28,7 +27,7 @@ import numpy as np
 
 class TimeDimension(object):
     """
-    Methods to efficiently create panel pandas/dask.DataFrames and 
+    Simple methods to efficiently create panel pandas/dask.DataFrames and 
     spatio-temporal xarray.DataArrays/dask.Arrays from cross-sectional data, 
     __at scale__
 
@@ -37,27 +36,38 @@ class TimeDimension(object):
         Xarray: http://xarray.pydata.org/en/stable/index.html
 
     """
-    def __init__(self, client=False, blocking=False, *args, **kwargs):
-        if client:
-            assert isinstance(client, Client)
-        self.client = client
-        self.blocking = blocking
+    def __init__(self):
+        """
+        """        
         super().__init__()
 
     def lag_features(self, dataframe, lag):
         """
-        Lag each observation in the provided dataframe by 'lag' 
-        number of periods
+        Lag each observation in the provided dataframe by previous 'lag' 
+        number of observations:
+
+        Given an ordered partition of cross-sectional data, '_create_panel_data'
+        will lag each observation(n) by 'lag' number of previous observations, 
+        before exporting the expanded result as a MultiIndexed pandas.DataFrame
+
+        Implementation Notes: 
+        Given how dask.dataframe.map_overlap works, (during step 4 and 5, 
+        the partition is trimmed from the beginning and end of the partition) 
+        this method cannot directly return an array (of any form) back to the 
+        user. It must first be run (by calling .compute()) before being passed 
+        to any downstream functions that would convert the expanded dataframe 
+        into an array
 
         Args:
             dataframe (dask.DataFrame):
-                A sorted DataFrame
+                A sorted dask.DataFrame
 
             lag (int):
                 The number of previous observations
 
-        :rtype operation
-        :returns: A dask.DataFrame containing the expanded dataframe
+        :rtype      operation
+        :returns:   A dask.DataFrame containing the expanded and now 
+                    MultiIndexed pandas.DataFrame
 
         """     
         assert lag > 0
@@ -66,26 +76,10 @@ class TimeDimension(object):
             func=lambda part: self._create_panel_data(part, lag=lag), 
             before=lag, after=0, meta=dict(features=float))
 
-        if self.client:
-            operation = self.client.persist(operation)
-            if self.blocking:
-                wait(operation)
-
         return operation
 
     def _create_panel_data(self, partition, lag):
         """
-        Given an ordered partition of cross-sectional data, '_create_panel_data'
-        will lag each observation(n) by 'lag' number of previous observations, 
-        before exporting the expanded result as a MultiIndexed pandas.DataFrame
-
-        Note: Given how dask.dataframe.map_overlap works, (during step 4 and 5, 
-        the partition is trimmed from the beginning and end of the partition) 
-        this method cannot directly return an array (of any form) back to the 
-        user. It must first be run (by calling .compute()) before being passed 
-        to any downstream functions that would convert the expanded dataframe 
-        into an array
-
         Args:
             partition (pandas.DataFrame):
                 A partition given as a pandas DataFrame
@@ -94,8 +88,7 @@ class TimeDimension(object):
                 The number of previous observations
 
         :rtype pandas.DataFrame
-        :returns: A __MultiIndexed__ pandas DataFrame
-
+        :returns: A __MultiIndexed__ pandas.DataFrame
         """
         assert len(partition) > lag
         return pd.concat(
@@ -103,7 +96,8 @@ class TimeDimension(object):
             axis=1, 
             keys=[f't-{l}' for l in range(0, lag+1)], 
             copy=False, 
-            sort=True)
+            sort=True
+        )
 
     def _get_dimensions(self, *args): # pass pandas.DataFrame, lag
         return len(args[0]), args[1]+1, int(len(args[0].columns) / (args[1]+1))
@@ -131,19 +125,22 @@ class TimeDimension(object):
         """
         Reshapes a Panel (MultiIndexed) dask.DataFrame into a dask.Array
 
-        Notes:
+        Implementation Notes:
         (1) data.values will not work because the partition sizes are unknown
                 https://github.com/dask/dask/issues/3090
                 https://stackoverflow.com/questions/37444943/dask-array-
                 from-dataframe
+
         (2) reshaping an xarray.DataArray is currently useless because
             dask.concatenate (although the method 'works' on xarray.DataArray) 
             does not preserve meta data; i.e., coords and dimensions
+
         (3) apparently, the class environment is not exported to workers so the 
             methods but be scoped within the reshape_to_daskarray function
 
         """
         assert lag > 0
+
         @delayed
         def _reshape_panel_to_nparray(dataframe, lag):
             """
@@ -170,26 +167,19 @@ class TimeDimension(object):
 
     def write_panel_data(self, dataframe, file_path, **kwargs):
         """
-        Parallel write 
+        Simple wrapper method around 'to_hdf': Parallel write 
         """
         assert isinstance(dataframe, dask.dataframe.DataFrame)
         operation = dataframe.to_hdf(
             file_path, "/partition-*", compute=False, **kwargs)
 
-        if self.client:
-            operation = self.client.persist(operation)
-            if self.blocking:
-                wait(operation)
         return operation
 
-    def read_panel_data(self, dataframe, file_path, **kwargs):
+    def read_panel_data(self, file_path, **kwargs):
         """
-        Parallel read 
+        Simple wrapper method around 'read_hdf': Parallel read 
         """
-        assert isinstance(dataframe, dask.dataframe.DataFrame)
-        operation = dataframe.read_hdf(file_path, "/partition-*", **kwargs)
-        if self.client:
-            operation = self.client.persist(operation)
+        operation = dask.dataframe.read_hdf(file_path, "/partition-*", **kwargs)
         return operation
 
 

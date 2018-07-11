@@ -16,5 +16,4 @@ Imports:
     usethis (>= 1.3),
     git2r (>= 0.21),
 	bit64 (>= 0.9)
-
 RoxygenNote: 6.0.1

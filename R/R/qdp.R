@@ -126,7 +126,7 @@ init_project <- start_project <- function(project, path="", cores=NULL,
         "require(doMC, quietly=TRUE)",
         "require(data.table, quietly=TRUE)",
         "data.table::setDTthreads(.cores)",
-        "doMC::registerDoMC(.cores)"
+        "doMC::registerDoMC(.cores)",
         sep = "\n"
       )
 

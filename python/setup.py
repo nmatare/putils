@@ -23,7 +23,7 @@ from setuptools import setup, find_packages
 
 # Package metadata.
 name = 'putils'
-description = 'Commonly used utility functions for public use'
+description = 'Utility functions for public use'
 version = '0.0.9'
 # Should be one of:
 # Development Status :: 1 - Planning
@@ -36,15 +36,19 @@ version = '0.0.9'
 release_status = 'Development Status :: 2 - Pre-Alpha'
 dependencies = [
     'google-cloud-bigquery>=0.28.0',
-    'google-cloud-storage>=1.6.0'
+    'google-cloud-storage>=1.6.0',
+    'xarray>=0.10.7',
+    'dask>=0.18.1',
+    'pandas>=0.23.1',
+    'numpy>=1.14.5'
 ]
 
 keywords='scaffolding python3 python-3.6 python R big-query google'
 extras = None
 
 # Boiler Plate
-package_root = os.path.abspath(os.path.dirname(__file__))
-
+import os
+package_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 readme_filename = os.path.join(package_root, 'README.md')
 with io.open(readme_filename, encoding='utf-8') as readme_file:
     readme = readme_file.read()
