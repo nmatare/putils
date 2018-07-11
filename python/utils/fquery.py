@@ -109,14 +109,34 @@ class FastBigQueryRetrieval(object):
 				blob_ref.download_to_file(file)
 			bucket_ref.delete_blob(blob_ref.name)
 
-	def read_csv_into_pandas(self):
+	def read_csv(self, file_path, **kwargs):
 		# read into pandas
 
-	def concat_avro_files(self):
-		# concat the avro files together
+	def read_avro(self, file_path, blocksize=1048576):
+        """
+       	Read the downloaded query into avro
 
-	def open_avro_in_spark(self):
-		# open the avro files as if one was in spark
+        Args:
+            file_path (str):
+                A message from the GDAX websocket API
+
+            blocksize (int):
+				Size of blocks. Note that this size must be larger than the 
+				files' internal block size, otheriwse it will result in 
+				empty partitions. Default is 1MB
+
+        :rtype: dask.delayed
+        :returns: a dask delayed object
+
+        """		
+		from dask_avro import read_avro
+		from dask.bag import from_delayed
+
+		delayed_avro = read_avro(file_path, blocksize=blocksize)
+		return from_delayed(delayed_avro)
+
+
+
 
 
 

@@ -144,11 +144,16 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
   client = bigquery$Client$from_service_account_json(service_file)
   base_name <- gsub("/","", tempfile("temp_bq_", tmpdir=""))
 
+  .get_table_ref <- function(client, dataset, base_name){
+    table_ref <- client$dataset(dataset)$table(paste0(base_name, "_temp_table"))
+    return(table_ref)
+  }
+
   .query_bigquery <- function(client, query, bigquery, base_name, 
                               dataset, verbose, legacy_sql)
   {
     job_config = bigquery$QueryJobConfig()
-    table_ref = client$dataset(dataset)$table(paste0(base_name, "_temp_table"))   
+    table_ref = .get_table_ref(client, dataset, base_name)    
     job_config$destination = table_ref
     job_config$use_legacy_sql = legacy_sql
     job_config$allow_large_results = TRUE
@@ -174,9 +179,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
       if(export_as == "avro") "AVRO" else "CSV"
     export_config$print_header = FALSE
 
-    table_ref = client$dataset(dataset)$table(
-      paste0(base_name, "_temp_table")) 
-
+    table_ref = .get_table_ref(client, dataset, base_name)  
     extract_job = client$extract_table(
       source=table_ref,
       destination_uris=paste0(
@@ -193,13 +196,13 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
   stopifnot(.send_to_gcs(client, bigquery, base_name, dataset, verbose))
 
   .delete_temp_table <- function(client, dataset, base_name){
-    table_ref = client$dataset(dataset)$table(paste0(base_name, "_temp_table"))
+    table_ref = .get_table_ref(client, dataset, base_name) 
     client$delete_table(table_ref)
     TRUE
   }
 
   .extract_meta_data <- function(client, dataset, base_name){
-    table_ref = client$dataset(dataset)$table(paste0(base_name, "_temp_table"))
+    table_ref = .get_table_ref(client, dataset, base_name) 
     meta_data <- sapply(py$list(client$get_table(table_ref)$schema), 
       function(x) c(x$name, x$field_type))
     return(meta_data)
@@ -281,7 +284,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
         stop(paste("Errors concatenating .avro files"))
 
       cat(paste0("The queried results are available in ", 
-        file.path(path, base_name), ".avro; use Spark to read the data \n"))
+        file.path(path, base_name), ".avro\n"))
       dt <- NULL
     }
 
@@ -294,7 +297,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
 }
 
 #' @description Maps BigQuery datatypes to R equivalent
-#' @param x The BigQuery Data type
+#' @param x The BigQuery datatype
 convert_big_query_types_to_r <- function(x){
   return(switch(x,
     "FLOAT" = "double", 
