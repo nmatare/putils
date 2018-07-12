@@ -269,14 +269,14 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
       if(!disk_only)
         dt <- data.table::fread(
           input=paste0( # identical to gunzip -c
-            if(export_as == "csv.gz") "zcat " else concat_names
+            if(export_as == "csv.gz") "zcat " else "", concat_names
           ), 
           showProgress=verbose,
           col.names=meta_data[1, ],
           colClasses=as.vector(
             sapply(meta_data[2, ], convert_big_query_types_to_r)),
           ...=...
-        )
+        )     
       else 
         if(system(paste("zcat", concat_names, " > ", output_name)) != 0)
           stop(paste("Errors concatenating ", export_as, " files"))
