@@ -70,6 +70,10 @@
 #' 
 #' @param verbose       (optional) Boolean control for progress display
 #' 
+#' @param disk_only     (optional) Whether to only download files to specified 
+#'                      path and avoid loading files into the R session.
+#'                      Defaults to True
+#' 
 #' @param download      (optional) Boolean control whether compressed files 
 #'                      should be automatically downloaded, or remain in GCS
 #'                      Note: You must manually delete the temporary files 
@@ -130,7 +134,7 @@
 fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table, 
                                    service_file, verbose=TRUE, download=TRUE, 
                                    path=tempdir(), legacy_sql=TRUE, 
-                                   export_as='csv.gz', ...          
+                                   disk_only=FALSE, export_as='csv.gz', ...          
 ){
 
   export_as <- match.arg(export_as, c("csv", "csv.gz", "avro"))
@@ -215,6 +219,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
 
   if(download){
 
+    dt <- NULL
     client = storage$Client$from_service_account_json(
       json_credentials_path=service_file)
     bucket_ref = client$get_bucket(bucket)
@@ -257,23 +262,23 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
       if(verbose)
         cat(paste("Reading", export_as ,"into memory as data.table \n"))
 
-      dt <- data.table::fread(
-        input=paste0(
-          if(export_as == "csv.gz") "zcat " else "", path, "/" , paste( 
-          temp_names, collapse=" ")), # identical to gunzip -c
-        showProgress=verbose,
-        col.names=meta_data[1, ],
-        colClasses=as.vector(
-          sapply(meta_data[2, ], convert_big_query_types_to_r)),
-        ...=...
-      )
+      if(!disk_only)
+        dt <- data.table::fread(
+          input=paste0(
+            if(export_as == "csv.gz") "zcat " else "", path, "/" , paste( 
+            temp_names, collapse=" ")), # identical to gunzip -c
+          showProgress=verbose,
+          col.names=meta_data[1, ],
+          colClasses=as.vector(
+            sapply(meta_data[2, ], convert_big_query_types_to_r)),
+          ...=...
+        )
 
     } else {
 
       if(verbose)
         cat(paste("Concatenating avro files \n"))
 
-      # @TODO fancy call the Java class directly with rJava and .jcall
       run_jar <- system.file("java", "avro-tools-1.8.2.jar", 
         package="putils", mustWork=TRUE)
       command <-  paste("java -jar", run_jar, "concat", 
@@ -283,10 +288,16 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
       if(system(command, ignore.stdout=TRUE, ignore.stderr=TRUE) != 0)
         stop(paste("Errors concatenating .avro files"))
 
-      cat(paste0("The queried results are available in ", 
-        file.path(path, base_name), ".avro \n"))
-      dt <- NULL
+      if(!disk_only) # highly inefficient given JSON parsing
+        dt <- data.table::as.data.table(ravro::read.avro( 
+          file=file.path(path, paste0(base_name, ".avro")),
+          ...=...
+        ))
     }
+
+    if(!disk_only)
+      cat(paste0("The queried results are available in ", 
+          file.path(path, base_name), ".", export_as," \n"))
 
     stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
     return(dt)

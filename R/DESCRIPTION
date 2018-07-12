@@ -12,6 +12,7 @@ Imports:
     reticulate (>= 1.8),
     unixtools (>= 0.1),
     data.table (>= 1.11.4),
+    ravro (>= 1.0.4),
     xts (>= 0.10),
     usethis (>= 1.3),
     git2r (>= 0.21),

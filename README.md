@@ -1,6 +1,6 @@
 # putils
 
-A hybrid R/Python package containing public utility functions/modules for data analysis
+A hybrid R/Python package containing public utility functions/modules for data analysis that others might find useful.
 
 * Version 0.0.9
 * Development Status :: 2 - Pre-Alpha
@@ -27,11 +27,8 @@ devtools::install_github("nmatare/putils", subdir="/R")
 
 Python installation
 
-* Prerequisites:
-- Install [spark-avro](https://github.com/databricks/spark-avro) from Databricks
-
 ```sh
-pip3 install git+https://github.com/nmatare/putils.git#egg=measurements
+pip3 install git+https://github.com/nmatare/putils/python.git#egg=measurements
 ```
 
 ## Usage:
@@ -74,7 +71,8 @@ putils::init_project(
   )
 )
 
-# For an already created project, running the script loads the configuration files and custom project settings
+# For an already created project, running the script loads the configuration 
+# files and custom project settings
 project_name <- "my_project"
 start_project(project_name)
 
@@ -91,7 +89,6 @@ import dask
 timeMethods = TimeDimension() 
 df = pd.DataFrame(np.random.randint(0,100, size=(100, 4)), columns=list('ABCD'))
 data = dask.dataframe.from_pandas(df, npartitions=3)
-
 
 # Lag Features as Panel Data
 data = timeMethods.lag_features(data, lag=20)
