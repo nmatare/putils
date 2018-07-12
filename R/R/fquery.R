@@ -277,8 +277,13 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
           ...=...
         )     
       } else {
-        write.csv(meta_data[1, ], # write header file
-          file=paste0(base_name, "-header.", export_as)) 
+        write.csv( # write header file
+          x=t(meta_data[1, ]), 
+          file=paste0(base_name, "-header.", export_as),
+          row.names=FALSE,
+          col.names=FALSE,
+          quote=FALSE
+        ) 
         delete_temp_files <- FALSE # no need to concat 
       }
 
