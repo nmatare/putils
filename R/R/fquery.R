@@ -48,9 +48,7 @@
 #'                      defaults to True
 #' 
 #' @param export_as     (optional) The exported file format. Possible values 
-#'                      include 'csv', 'csv.gz', or 'avro.' Defaults to 'csv'; 
-#'                      Note: As of this writing, Google BigQuery charges per
-#'                      the __uncompressed__ size of the downloaded data
+#'                      include 'csv', 'csv.gz', or 'avro.' Defaults to 'csv' 
 #' 
 #' @param project_id    Project name/id for the project which the client acts 
 #'                      on behalf of
@@ -278,8 +276,11 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
             sapply(meta_data[2, ], convert_big_query_types_to_r)),
           ...=...
         )     
-      } else 
+      } else {
+        write.csv(meta_data[1, ], # write header file
+          file=paste0(base_name, "-header.", export_as)) 
         delete_temp_files <- FALSE # no need to concat 
+      }
 
     } else { # else avro
 
