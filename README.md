@@ -7,7 +7,7 @@ A hybrid R/Python package containing public utility functions/modules for data a
 
 ## Features:
 
-  * `init_project`, `start_project` - scaffolding to quickly start and deploy an R/ Python project(analysis )
+  * `init_project`, `start_project` - scaffolding to quickly start and deploy an R/ Python project(analysis)
 
   * `fast_bq_query_with_gcs` - quickly download large datasets from Google BigQuery
 
@@ -52,7 +52,7 @@ str(output) # data.table created from csv.gz files
 
 ```
 
-### Quickly Deployable Project 
+### Quickly Deployable Project (qdp)
 
 ```R
 # Init Setup
@@ -71,10 +71,27 @@ putils::init_project(
   )
 )
 
+# This will create a project directory structure with the following default
+# configuration:
+# project              # name of project
+#  ├── README.md       # readme
+#  ├── .git/           # git  
+#  ├── inst/           # installation
+#  ├── data/           # data
+#  ├── lib/            # library code
+#  │   ├── class.py    # e.g., python code (e.g., .R, .py files)
+#  │   └── analysis.R  # e.g., R analysis script
+#  ├── conf/
+#  │    ├── config.py  # python config files
+#  │    └── config.R   # R config files
+#  ├── lit/            # literature
+#  ├── report/         # reports
+#  └── log/            # log files
+
 # For an already created project, running the script loads the configuration 
 # files and custom project settings
 project_name <- "my_project"
-start_project(project_name)
+putils::start_project(project_name)
 
 ```
 

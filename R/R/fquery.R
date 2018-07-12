@@ -218,6 +218,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
     meta_data <- .extract_meta_data(client, dataset, base_name)
 
   stopifnot(.delete_temp_table(client, dataset, base_name))
+  delete_temp_files <- TRUE # set flag
 
   if(download){
 
@@ -262,11 +263,11 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
     if(Sys.info()["sysname"] != "Windows")
       unixtools::set.tempdir(path)
 
-    if(export_as != "avro"){
-      if(verbose)
-        cat(paste("Reading", export_as ,"into memory as data.table \n"))
-
-      if(!disk_only)
+    if(export_as %in% c("csv", "csv.gz")){
+      if(!disk_only){
+        if(verbose)
+          cat(paste("Reading", export_as ,"into memory as data.table \n"))
+        
         dt <- data.table::fread(
           input=paste0( # identical to gunzip -c
             if(export_as == "csv.gz") "zcat " else "", concat_names
@@ -277,36 +278,40 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
             sapply(meta_data[2, ], convert_big_query_types_to_r)),
           ...=...
         )     
-      else 
-        if(system(paste("zcat", concat_names, " > ", output_name)) != 0)
-          stop(paste("Errors concatenating ", export_as, " files"))
+      } else 
+        delete_temp_files <- FALSE # no need to concat 
 
-    } else {
+    } else { # else avro
 
-      if(verbose)
-        cat(paste("Concatenating avro files \n"))
+      if(!disk_only){ # highly inefficient given JSON parsing
 
-      run_jar <- system.file("java", "avro-tools-1.8.2.jar", 
-                             package="putils", mustWork=TRUE)
+        run_jar <- system.file("java", "avro-tools-1.8.2.jar", 
+                               package="putils", mustWork=TRUE)
+        command <-  paste("java -jar", run_jar, 
+                          "concat", concat_names, output_name)
 
-      command <-  paste("java -jar", run_jar, 
-                        "concat", concat_names, output_name)
+        if(verbose)
+          cat(paste("Concatenating avro files \n"))
 
-      if(system(command, ignore.stdout=TRUE, ignore.stderr=TRUE) != 0)
-        stop(paste("Errors concatenating ", export_as, " files"))
+        if(system(command, ignore.stdout=TRUE, ignore.stderr=TRUE) != 0)
+          stop(paste("Errors concatenating", export_as, "files"))
 
-      if(!disk_only) # highly inefficient given JSON parsing
         dt <- data.table::as.data.table(ravro::read.avro(
           file=output_name,
           ...=...
         ))
+
+      } else
+        delete_temp_files <- FALSE
     }
 
-    if(!disk_only)
+    if(disk_only)
       cat(paste0("The queried results are available in ", 
-          file.path(path, base_name), ".", export_as," \n"))
+          file.path(path, base_name), "...[0-9+] \n"))
 
-    stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
+    if(delete_temp_files)
+      stopifnot(all(unlist(lapply(temp_names, .remove_temp_file))))
+
     return(dt)
 
   } else 
@@ -318,21 +323,21 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
 #' @param x The BigQuery datatype
 convert_big_query_types_to_r <- function(x){
   return(switch(x,
-    "FLOAT" = "double", 
-    "FLOAT64" = "double",
-    "NUMERIC" = "double",
-    "INTEGER" = "integer",
-    "INT64" = "bit64::integer64",
+    "FLOAT"     = "double", 
+    "FLOAT64"   = "double",
+    "NUMERIC"   = "double",
+    "INTEGER"   = "integer",
+    "INT64"     = "bit64::integer64",
     "TIMESTAMP" = "character", # Dates are read as character currently.
-    "DATE" = "character", # "
-    "TIME" = "character", # "
-    "DATETIME" = "character", # "
-    "BOOLEAN" = "logical",
-    "BOOL" = "logical",
-    "STRING" = "character",
-    "BYTES" = "raw",
-    "RECORD" = stop("Queries returning records are not supported"),
-    "ARRAY" = stop("Queries returning nested arrays are not supported")
+    "DATE"      = "character", # "
+    "TIME"      = "character", # "
+    "DATETIME"  = "character", # "
+    "BOOLEAN"   = "logical",
+    "BOOL"      = "logical",
+    "STRING"    = "character",
+    "BYTES"     = "raw",
+    "RECORD"    = stop("Queries returning records are not supported"),
+    "ARRAY"     = stop("Queries returning nested arrays are not supported")
   ))
 }
 
