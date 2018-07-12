@@ -48,7 +48,9 @@
 #'                      defaults to True
 #' 
 #' @param export_as     (optional) The exported file format. Possible values 
-#'                      include 'csv', 'csv.gz', or 'avro.' Defaults to 'csv.gz'
+#'                      include 'csv', 'csv.gz', or 'avro.' Defaults to 'csv'; 
+#'                      Note: As of this writing, Google BigQuery charges per
+#'                      the __uncompressed__ size of the downloaded data
 #' 
 #' @param project_id    Project name/id for the project which the client acts 
 #'                      on behalf of
@@ -251,9 +253,11 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
     if(!all(unlist(results)))
       stop(paste("Errors downloading", export_as ,"files"))
 
-    temp_names <- list.files(path=path, 
-      pattern=paste0(base_name, ".*.", export_as))
     bucket_ref$delete_blobs(blobs)
+
+    output_name   <- file.path(path, paste(base_name, export_as, sep="."))
+    temp_names    <- list.files(path=path, paste0(base_name, ".*.", export_as))
+    concat_names  <- paste(file.path(path, temp_names), collapse=" ")
 
     if(Sys.info()["sysname"] != "Windows")
       unixtools::set.tempdir(path)
@@ -264,15 +268,18 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
 
       if(!disk_only)
         dt <- data.table::fread(
-          input=paste0(
-            if(export_as == "csv.gz") "zcat " else "", path, "/" , paste( 
-            temp_names, collapse=" ")), # identical to gunzip -c
+          input=paste0( # identical to gunzip -c
+            if(export_as == "csv.gz") "zcat " else concat_names
+          ), 
           showProgress=verbose,
           col.names=meta_data[1, ],
           colClasses=as.vector(
             sapply(meta_data[2, ], convert_big_query_types_to_r)),
           ...=...
         )
+      else 
+        if(system(paste("zcat", concat_names, " > ", output_name)) != 0)
+          stop(paste("Errors concatenating ", export_as, " files"))
 
     } else {
 
@@ -280,17 +287,17 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
         cat(paste("Concatenating avro files \n"))
 
       run_jar <- system.file("java", "avro-tools-1.8.2.jar", 
-        package="putils", mustWork=TRUE)
-      command <-  paste("java -jar", run_jar, "concat", 
-                    paste(file.path(path, temp_names), collapse=" "), 
-                      file.path(path, paste0(base_name, ".avro")))
+                             package="putils", mustWork=TRUE)
+
+      command <-  paste("java -jar", run_jar, 
+                        "concat", concat_names, output_name)
 
       if(system(command, ignore.stdout=TRUE, ignore.stderr=TRUE) != 0)
-        stop(paste("Errors concatenating .avro files"))
+        stop(paste("Errors concatenating ", export_as, " files"))
 
       if(!disk_only) # highly inefficient given JSON parsing
-        dt <- data.table::as.data.table(ravro::read.avro( 
-          file=file.path(path, paste0(base_name, ".avro")),
+        dt <- data.table::as.data.table(ravro::read.avro(
+          file=output_name,
           ...=...
         ))
     }
