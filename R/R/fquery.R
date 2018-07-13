@@ -277,7 +277,7 @@ fast_bq_query_with_gcs <- function(query, project_id, bucket, dataset, table,
           ...=...
         )     
       } else {
-        write.csv( # write header file
+        write.table( # write header file
           x=t(meta_data[1, ]), 
           file=paste0(base_name, "-header.", export_as),
           row.names=FALSE,
@@ -332,8 +332,8 @@ convert_big_query_types_to_r <- function(x){
     "FLOAT"     = "double", 
     "FLOAT64"   = "double",
     "NUMERIC"   = "double",
-    "INTEGER"   = "integer",
-    "INT64"     = "bit64::integer64",
+    "INTEGER"   = "integer64",
+    "INT64"     = "integer64",
     "TIMESTAMP" = "character", # Dates are read as character currently.
     "DATE"      = "character", # "
     "TIME"      = "character", # "
