@@ -127,8 +127,9 @@ array_data
 ### TimeDimension 
 
 ```python
-queries = AdvancedSQLQueries()
+from putils.pysql import AdvancedSQLQueries
 
+queries = AdvancedSQLQueries()
 columns = {'col1':None, 'col2':None, 'col3':None}
 
 queries.ffillnull(columns, index='time') # sorted by time first
