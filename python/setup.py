@@ -24,7 +24,7 @@ from setuptools import setup, find_packages
 # Package metadata.
 name = 'putils'
 description = 'Utility functions for public use'
-version = '0.0.9'
+version = '0.1.0'
 # Should be one of:
 # Development Status :: 1 - Planning
 # Development Status :: 2 - Pre-Alpha

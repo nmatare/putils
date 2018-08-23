@@ -48,7 +48,12 @@
 #'                      defaults to True
 #' 
 #' @param export_as     (optional) The exported file format. Possible values 
-#'                      include 'csv', 'csv.gz', or 'avro.' Defaults to 'csv' 
+#'                      include 'csv', 'csv.gz', or 'avro.' Defaults to 'csv'
+#'                      From Google, "When you run a query, you're charged 
+#'                      according to the total data processed in the columns 
+#'                      you select, even if you set an explicit LIMIT on 
+#'                      the results." See: https://cloud.google.com/bigquery/
+#'                      docs/best-practices-costs
 #' 
 #' @param project_id    Project name/id for the project which the client acts 
 #'                      on behalf of

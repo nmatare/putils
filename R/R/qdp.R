@@ -98,7 +98,7 @@ init_project <- start_project <- function(project, path="", cores=NULL,
         .cores <<- cores
 
   if(!dir.exists(path=root_dir)){
-    cat(paste0("... creating new project ", project))
+    cat(paste0("... creating new project ", project, "\n"))
     
     dir.create(path=root_dir) # create parent 
     branch_dirs <- file.path(root_dir, 

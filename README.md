@@ -124,9 +124,23 @@ array_data
 
 ```
 
-Author(s)
-----
-* Nathan Matare 
+### TimeDimension 
+
+```python
+queries = AdvancedSQLQueries()
+
+columns = {'col1':None, 'col2':None, 'col3':None}
+
+queries.ffillnull(columns, index='time') # sorted by time first
+# LAST_VALUE(col1 IGNORE NULLS) OVER (ORDER BY time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+#...
+
+queries.pivot(columns:dict, index:str, value:str, fill="NULL")
+# MAX(IF({index}={v},{value},{fill})) AS {k}
+# MAX(IF({index}={v},{value},{fill})) AS {k}
+
+```
+
 
 ## License
 

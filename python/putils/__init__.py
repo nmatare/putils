@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 
 try:
   import pkg_resources
@@ -12,5 +12,6 @@ __all__ = [
     # modules
     '__version__',
     'FastBigQueryRetrieval',
-    'TimeDimension'
+    'TimeDimension',
+    'AdvancedSQLQueries'
 ]

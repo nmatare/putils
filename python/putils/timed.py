@@ -118,7 +118,7 @@ class TimeDimension(object):
                 list(dataframe.columns.levels[0].values), 
                 list(dataframe.columns.levels[1].values)
             ],
-            dims=["observations", "lags", "features"])
+            dims=["observations", "time_steps", "features"])
         return export
 
     def reshape_to_daskarray(self, dataframe, lag):
