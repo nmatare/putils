@@ -149,5 +149,5 @@ class AdvancedSQLQueries(object):
         statement = f"LAG({k},{periods})"
       else:
         statement = f"LEAD({k},{abs(periods)})"
-      shift.append(f"{statement} OVER(ORDER BY {index}) AS {k}_{periods:02d}")
+      shift.append(f"{statement} OVER(ORDER BY {index}) AS {k}_T{periods:02d}")
     return shift
