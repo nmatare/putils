@@ -146,8 +146,8 @@ class AdvancedSQLQueries(object):
     shift = []
     for k, v in columns.items():
       if periods >= 0:
-        statement = f"LAG({k},{periods}) AS {k}_{periods:02d}"
+        statement = f"LAG({k},{periods})"
       else:
-        statement = f"LEAD({k},{abs(periods)}) AS {k}_{periods:02d}"
-      shift.append(f"{statement} OVER(ORDER BY {index})")
+        statement = f"LEAD({k},{abs(periods)})"
+      shift.append(f"{statement} OVER(ORDER BY {index}) AS {k}_{periods:02d}")
     return shift
