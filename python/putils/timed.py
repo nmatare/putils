@@ -37,8 +37,7 @@ class TimeDimension(object):
 
     """
     def __init__(self):
-        """
-        """        
+        """  """        
         super().__init__()
 
     def lag_features(self, dataframe, lag):
@@ -172,7 +171,6 @@ class TimeDimension(object):
         assert isinstance(dataframe, dask.dataframe.DataFrame)
         operation = dataframe.to_hdf(
             file_path, "/partition-*", compute=False, **kwargs)
-
         return operation
 
     def read_panel_data(self, file_path, **kwargs):

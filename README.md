@@ -28,7 +28,7 @@ devtools::install_github("nmatare/putils", subdir="/R")
 Python installation
 
 ```sh
-pip3 install git+https://github.com/nmatare/putils/python.git#egg=measurements
+pip3 install -e git+https://github.com/nmatare/putils.git#egg=version_subpkg\&subdirectory=python
 ```
 
 ## Usage:
@@ -133,12 +133,14 @@ queries = AdvancedSQLQueries()
 columns = {'col1':None, 'col2':None, 'col3':None}
 
 queries.ffillnull(columns, index='time') # sorted by time first
-# LAST_VALUE(col1 IGNORE NULLS) OVER (ORDER BY time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+# LAST_VALUE(col1 IGNORE NULLS) OVER (ORDER BY time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS col1
+# LAST_VALUE(col2 IGNORE NULLS) OVER (ORDER BY time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS col2
 #...
+columns = {'col1':01, 'col2':02, 'col3':03}
 
 queries.pivot(columns:dict, index:str, value:str, fill="NULL")
-# MAX(IF({index}={v},{value},{fill})) AS {k}
-# MAX(IF({index}={v},{value},{fill})) AS {k}
+# MAX(IF({index}=02,{value},NULL)) AS col1
+# MAX(IF({index}=03,{value},NULL)) AS col2
 
 ```
 
